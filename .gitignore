@@ -1,6 +1,8 @@
 *.o
+*.x
 flines
 *.vtk
 *.flines
 *.png
 *.seed.lis
+bin
