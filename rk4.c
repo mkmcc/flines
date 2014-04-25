@@ -65,9 +65,8 @@ void RK4_integrate(Real3Vect *xvals)
     /* ...or if loop closes */
     dr = dist(&xvals[maxstep/2], &xvals[i+1]);
     maxdr = MAX(maxdr, dr);
-    if (maxdr > close_hi && dr <= close_lo) {
+    if (maxdr > close_hi && dr <= close_lo)
       break;
-    }
 
     h = h_next;
     i -= 1;
