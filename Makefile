@@ -19,7 +19,7 @@ all:    $(MAIN)
 	@echo  build finished
 
 $(MAIN): $(OBJS)
-	$(CC) $(CFLAGS) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $(MAIN) $(OBJS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
