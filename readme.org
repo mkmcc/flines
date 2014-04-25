@@ -1,4 +1,5 @@
 #+TITLE: flines: plot streamlines in vtk files
+#+STARTUP:showall
 
 This is a program for plotting streamlines of 3D vector fields.  
 
@@ -22,6 +23,9 @@ This is a program for plotting streamlines of 3D vector fields.
   [[examples/mti.png]]
 
   [[http://astro.berkeley.edu/~mkmcc/spaghetti.mov][movie]] of a ball of tangled field lines unwinding
+
+  [[http://astro.berkeley.edu/~mkmcc/loop.mov][movie]] of a ball of field loops advecting through periodic boundary
+  conditions
 
 * usage
   TODO
