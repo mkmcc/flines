@@ -14,8 +14,8 @@ base       = Dir.glob('*.0000.vtk').first.gsub('.0000.vtk', '').gsub('id0/', '')
 # intersect vtk_files and seed_files
 nums = vtk_files & seed_files
 
+# build a list of commands to update field line files
 cmds = []
-
 nums.each do |num|
   vtkfile  = "#{base}.#{num}.vtk"
   seedfile = "#{base}.#{num}.seed.lis"
@@ -37,6 +37,9 @@ if cmds.empty?
   exit 0
 end
 
+# save the commands to a temporary file so we can feed it into gnu
+# parallel
+#
 cmdfile = Tempfile.new(['mk-flines', '.sh'], '.')
 cmds.each do |cmd|
   cmdfile.write(cmd)
