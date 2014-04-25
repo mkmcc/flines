@@ -1,0 +1,26 @@
+<files>
+vtk_file  =  test.vtk
+out_file  =  test.flines
+
+<initial_condition>
+n_seed  =  1000
+
+<integration>
+step_limit   =  50000
+line_length  =  1.0
+n_lines      =  100
+
+n_bundle     =  100
+chaos_cut    =  5.0
+
+xeno         =  1.0e-6
+tolerance    =  1.0e-6
+
+close_lo     =  4.0
+close_hi     =  8.0
+
+<par_end>
+
+# Local Variables:
+# mode: athinput
+# End:
