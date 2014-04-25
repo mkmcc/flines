@@ -18,3 +18,13 @@ void ath_error(char *fmt, ...)
 
   exit(EXIT_FAILURE);
 }
+
+char *ath_strdup(const char *in)
+{
+  char *out = (char *)malloc((1+strlen(in))*sizeof(char));
+  if(out == NULL) {
+    printf("ath_strdup: failed to alloc %d\n", (int)(1+strlen(in)));
+    return NULL; /* malloc failed */
+  }
+  return strcpy(out,in);
+}

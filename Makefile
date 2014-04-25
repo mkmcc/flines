@@ -8,7 +8,7 @@ CFLAGS = -W -Wall -pedantic -O3
 LIBS = -lm
 
 # define the C source files
-SRCS = random.c ath_error.c ath_array.c ath_vtk.c rk4.c main.c
+SRCS = random.c ath_error.c ath_array.c ath_vtk.c rk4.c par.c main.c
 OBJS = $(SRCS:.c=.o)
 
 MAIN = flines

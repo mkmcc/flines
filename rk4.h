@@ -12,8 +12,11 @@ extern int Nx, Ny, Nz;
 extern double dx, dy, dz;
 extern Real3Vect ***B;
 
-extern const int maxstep;
+extern int maxstep;
 extern double maxlen;
+extern double accuracy_goal;
+extern double xeno;
+extern double close_lo, close_hi;
 
 inline double dist(Real3Vect *p1, Real3Vect *p2);
 

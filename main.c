@@ -10,6 +10,7 @@
 #include "ath_vtk.h"
 #include "random.h"
 #include "rk4.h"
+#include "par.h"
 
 /* VTK things */
 extern int Nx, Ny, Nz;
@@ -17,11 +18,13 @@ extern double dx, dy, dz;
 extern Real3Vect ***B;
 
 /* required by RK4.h */
-const int maxstep=20000;
-double maxlen;
+int maxstep;
+double maxlen, accuracy_goal;
+double close_lo, close_hi, xeno;
 
 /* driver function */
-static const int nlines = 300;
+static int nlines, nbundle;
+static double chaos_cut;
 void integrate_line(Real3Vect *xvals);
 
 int file_exists(const char *fname);
@@ -39,28 +42,60 @@ int main (int argc, char *argv[])
   Real3Vect **xvals;
 
   Real3Vect *seedpoints;
-  const int nseed = 1000;       /* WARNING: hard-coded */
+  int nseed;
 
-  char *vtkfile=NULL, *seedfile=NULL, outfname[512];
+  char *vtkfile, *seedfile, *outfname, buf[512];
+
+  char *definput = "input.fline";         /* default input filename */
+  char *athinput = definput;
 
 
   srand(-4);
 
-  /* process arguments */
-  if (argc == 2) {
-    vtkfile  = argv[1];
-    seedfile = NULL;
-  } else if (argc == 3) {
-    vtkfile  = argv[1];
-    seedfile = argv[2];
+  /* parse command line options */
+  for (i=1; i<argc; i++) {
+    if (*(argv[i]) == '-') {
+      switch(*(argv[i]+1)) {
+      case 'i':                      /* -i <file>   */
+        athinput = argv[++i];
+        break;
+      default:
+        break;
+      }
+    }
   }
-  else
-    ath_error("usage: %s vtk-file [seed-file] \n", argv[0]);
 
-  sprintf(outfname, "%s.flines", vtkfile);
-  if (file_exists(outfname)) {
-    ath_error("output file exists: %s\n", outfname);
-  }
+
+  par_open(athinput);
+  par_cmdline(argc, argv);
+
+  vtkfile  = par_gets("files", "vtk_file");
+
+  sprintf(buf, "%s.flines", vtkfile);
+  outfname = par_gets_def("files", "out_file", buf);
+
+
+  nseed    = par_geti_def("initial_condition", "n_seed",    1000);
+  seedfile = par_gets_def("initial_condition", "seed_file", NULL);
+
+
+  maxstep = par_geti_def("integration", "step_limit",  20000);
+  maxlen  = par_getd_def("integration", "line_length", 1.0);
+  nlines  = par_geti_def("integration", "n_lines",     100);
+
+  nbundle   = par_geti_def("integration", "n_bundle",  100);
+  chaos_cut = par_getd_def("integration", "chaos_cut", 5.0);
+
+  xeno     = par_getd_def("integration", "xeno",     1.0e-6);
+  close_lo = par_getd_def("integration", "close_lo", 1.0);
+  close_hi = par_getd_def("integration", "close_hi", 4.0);
+
+  accuracy_goal = par_getd_def("integration", "tolerance", 1.0e-6);
+
+  par_dump(2, stdout);
+  par_close();
+
+
 
 
   /* read the VTK file */
@@ -69,7 +104,7 @@ int main (int argc, char *argv[])
   fclose(fp);
 
 
-  maxlen = Nx;
+  maxlen *= Nx;
   normalize_B();
 
   seedpoints = (Real3Vect*) calloc_1d_array(nseed, sizeof(Real3Vect));
@@ -107,6 +142,7 @@ int main (int argc, char *argv[])
 
   return 0;
 }
+
 
 void write_data(char *outfname, Real3Vect **xvals)
 {
@@ -230,10 +266,7 @@ void integrate_line(Real3Vect *xvals)
   int i,j;
 
   Real3Vect **bundle;
-  const int nbundle = 100;
-
   double sigma;
-  const double chaos_cut = 5.0;
 
   /* initialize a bundle of nearby field lines */
   bundle = (Real3Vect**) calloc_2d_array(nbundle, maxstep, sizeof(Real3Vect));
@@ -263,7 +296,6 @@ void integrate_line(Real3Vect *xvals)
     if (sigma > chaos_cut)
       break;
   }
-  printf("applied chaos cut after %d steps.\n", j-maxstep/2);
   while (j<maxstep) {
     xvals[j].x1 = xvals[j].x2 = xvals[j].x3 = -1.0;
     j++;
@@ -279,7 +311,6 @@ void integrate_line(Real3Vect *xvals)
     if (sigma > chaos_cut)
       break;
   }
-  printf("applied chaos cut after %d steps.\n", maxstep/2-j);
   while (j>0) {
     xvals[j].x1 = xvals[j].x2 = xvals[j].x3 = -1.0;
     j--;

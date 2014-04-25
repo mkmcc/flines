@@ -7,8 +7,8 @@ void RK4_integrate(Real3Vect *xvals)
 {
   int i;
   double h, h_did, h_next, h_try = 1.0;
-  double tolerance = 1.0e-6;
-  double dr, maxdr, dl, xeno = 1.0e-6;
+  double tolerance = accuracy_goal;
+  double dr, maxdr, dl;
 
   h = h_try;
   /* integrate forward... */
@@ -65,8 +65,9 @@ void RK4_integrate(Real3Vect *xvals)
     /* ...or if loop closes */
     dr = dist(&xvals[maxstep/2], &xvals[i+1]);
     maxdr = MAX(maxdr, dr);
-    if (maxdr > 4.0 && dr <= 1.0)
+    if (maxdr > close_hi && dr <= close_lo) {
       break;
+    }
 
     h = h_next;
     i -= 1;
@@ -112,7 +113,7 @@ void RK4_qc_step(Real3Vect *xn, Real3Vect *xnp1,
     err = sqrt(SQR(error.x1) + SQR(error.x2) + SQR(error.x3));
     err /= tolerance;
 
-    err = MAX(fabs(err), 1.0e-8);
+    err = MAX(fabs(err), TINY_NUMBER);
 
     /* if the error is small enough, increase the next time-step and exit... */
     if (err <= 1.0) {

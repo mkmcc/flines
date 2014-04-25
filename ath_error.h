@@ -9,4 +9,6 @@
 FILE *atherr_fp(void);
 void ath_error(char *fmt, ...);
 
+char *ath_strdup(const char *in);
+
 #endif
