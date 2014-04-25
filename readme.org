@@ -1,0 +1,38 @@
+#+TITLE: flines: plot streamlines in vtk files
+
+This is a program for plotting streamlines of 3D vector fields.  
+
+* details
+  I integrate streamlines using a 4th order Runge-Kutta solver with
+  an adaptive step size; I use linear interpolation to get the values
+  of the vector field along the streamline.
+
+  I attempt to cut off the integration when the streamlines either
+  close, or become chaotic and unpredictable.  The latter is not
+  necessary for still images, but essential for making movies.
+
+  I plot the streamlines using a simple mathematica code.  It builds
+  a simple camera matrix and uses it to project the lines onto an
+  image plane.  I prefer a short-ish focal length to exaggerate the
+  perspective.  I also scale the width and brightness of the lines
+  with distance to make them look more 3D.
+
+* examples
+  [[examples/ball.png]]
+  [[examples/mti.png]]
+
+  [[http://astro.berkeley.edu/~mkmcc/spaghetti.mov][movie]] of a ball of tangled field lines unwinding
+
+* usage
+  TODO
+
+* status
+  This code is an early prototype, and it may never mature beyond
+  that.  In particular, it's written for my own working style and for
+  the types of data I work with.  I've made no attempt to make this
+  generally applicable or in any way user-friendly.
+
+  That being said, you are of course free to use this code if you
+  like.  And I welcome patches, bug reports, or feature requests.  At
+  the moment, I just don't have the resources to turn this into a
+  finished application.
