@@ -1,23 +1,22 @@
 #include "rk4.h"
 
-/* "driver" function for the integration.  takes an array of x values
-   and integrates forward and backward from the initial condition,
-   assumed to be in the middle. */
+/* Integrate forward and backward along a field line until either
+     a) you hit the edge of the box, or
+     b) the loop closes, or
+     c) you hit maxlen or maxsteps, or
+     d) you land in a region where B~0 */
 void RK4_integrate(Real3Vect *xvals)
 {
   int i;
   double h, h_did, h_next, h_try = 1.0;
-  double tolerance = accuracy_goal;
   double dr, maxdr, dl;
 
   h = h_try;
   /* integrate forward... */
   i = maxstep/2;
   maxdr = dl = 0.0;
-  while(xvals[i].x1 > 0 && xvals[i].x1 < Nx-1 &&
-        xvals[i].x2 > 0 && xvals[i].x2 < Ny-1 &&
-        xvals[i].x3 > 0 && xvals[i].x3 < Nz-1 &&
-        i < maxstep-1) {
+  while (in_bounds(&xvals[i]) && i < maxstep-1)
+  {
     RK4_qc_step(&xvals[i], &xvals[i+1], h, &h_did, &h_next, tolerance, 1);
 
     /* stop if we land in a region where B = 0... */
@@ -46,10 +45,8 @@ void RK4_integrate(Real3Vect *xvals)
    /* ... then integrate backward */
   i = maxstep/2;
   maxdr = dl = 0.0;
-  while(xvals[i].x1 > 0 && xvals[i].x1 < Nx-1 &&
-        xvals[i].x2 > 0 && xvals[i].x2 < Ny-1 &&
-        xvals[i].x3 > 0 && xvals[i].x3 < Nz-1 &&
-        i > 0) {
+  while (in_bounds(&xvals[i]) && i > 0)
+  {
     RK4_qc_step(&xvals[i], &xvals[i-1], h, &h_did, &h_next, tolerance, -1);
 
     /* stop if we land in a region where B = 0... */
@@ -85,33 +82,21 @@ void RK4_qc_step(Real3Vect *xn, Real3Vect *xnp1,
                  double tolerance, int dir)
 {
   double h, err;
-  Real3Vect x_coarse, error, k;
+  Real3Vect x_coarse;
   int i;
 
   h = h_try;
   i = 0;
   while (1==1){
-    /* take two half-steps.  save in xnp1 */
+    /* take two half-steps.  save in xnp1; use x_coarse as a scratch buffer */
     RK4_step(xn,        &x_coarse, 0.5*h, dir);
     RK4_step(&x_coarse, xnp1,      0.5*h, dir);
 
     /* take a full step.  save in x_coarse */
-    RK4_step(xn,        &x_coarse, h, dir);
+    RK4_step(xn, &x_coarse, h, dir);
 
     /* estimate the error */
-    interpolate_B(xn, &k);
-
-    error.x1 = fabs(x_coarse.x1 - xnp1->x1);
-    error.x2 = fabs(x_coarse.x2 - xnp1->x2);
-    error.x3 = fabs(x_coarse.x3 - xnp1->x3);
-
-    error.x1 /= 1.0;            /* scale errors to cell size (1.0) */
-    error.x2 /= 1.0;
-    error.x3 /= 1.0;
-
-    err = sqrt(SQR(error.x1) + SQR(error.x2) + SQR(error.x3));
-    err /= tolerance;
-
+    err = dist(&x_coarse, xnp1) / tolerance;
     err = MAX(fabs(err), TINY_NUMBER);
 
     /* if the error is small enough, increase the next time-step and exit... */
@@ -210,4 +195,12 @@ void interpolate_B(Real3Vect *pos, Real3Vect *val)
   val->x3 = B[k][j][i].x3 + grad.x3 * dr.x3;
 
   return;
+}
+
+
+inline int in_bounds(Real3Vect *x)
+{
+  return (x->x1 > 0 && x->x1 < Nx-1 &&
+          x->x2 > 0 && x->x2 < Ny-1 &&
+          x->x3 > 0 && x->x3 < Nz-1);
 }
