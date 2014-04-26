@@ -22,12 +22,6 @@
 #
 # TODO:
 #
-# 1. Detect whether parallel exists; if not run in serial.
-#
-# 2. Make the call to gnu parallel less ugly... maybe using ruby
-#    parallel? https://github.com/grosser/parallel
-#
-# 3. Return with an error if flines doesn't exist
 #
 require 'fileutils'
 require 'tempfile'
@@ -36,6 +30,13 @@ require 'tempfile'
 #
 def issue_cmd(cmd)
   system cmd
+end
+
+
+# test whether a command exists on the system path
+#
+def command?(command)
+  system("which #{ command} > /dev/null 2>&1")
 end
 
 
@@ -101,6 +102,11 @@ end
 
 # <program>
 
+if not File.executable?('./flines')
+  puts "###error: flines not found"
+  exit 1
+end
+
 # get the basename
 base = get_base(Dir.glob('*.vtk').first)
 
@@ -126,9 +132,16 @@ end
 if cmds.empty?
   puts "all up to date"
   exit 0
-else
-  puts "running #{cmds.length} files..."
+end
+
+puts "running #{cmds.length} files..."
+
+if command?('parallel')
   pipe_to_parallel(cmds)
+else
+  cmds.each do |cmd|
+    issue_cmd(cmd)
+  end
 end
 
 # </program>
