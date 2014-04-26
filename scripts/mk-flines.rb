@@ -102,8 +102,13 @@ end
 
 # <program>
 
-if not File.executable?('./flines')
+unless File.executable?('./flines')
   puts "###error: flines not found"
+  exit 1
+end
+
+unless File.readable?('./input.fline')
+  puts "###error: input.fline not found"
   exit 1
 end
 
