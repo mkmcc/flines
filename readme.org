@@ -14,7 +14,7 @@
   The project really comprises two codes: there's a c code which reads
   in the simulation data and integrates the field lines.  And there's
   a mathematica code which makes the plots.  Each can be used quite
-  independently; see the implantation section below for more
+  independently; see the implementation section below for more
   information.
 
 * examples
