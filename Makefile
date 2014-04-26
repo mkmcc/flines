@@ -1,7 +1,7 @@
 .PHONY: clean
 
 all:    dirs integrate scripts plot
-	@echo  build finished
+	@echo  executables stored in bin/
 
 dirs:
 	mkdir -p bin
