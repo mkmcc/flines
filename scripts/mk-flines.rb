@@ -27,6 +27,8 @@
 # 2. Make the call to gnu parallel less ugly... maybe using ruby
 #    parallel? https://github.com/grosser/parallel
 #
+# 3. Return with an error if flines doesn't exist
+#
 require 'fileutils'
 require 'tempfile'
 
@@ -57,31 +59,55 @@ def pipe_to_parallel(cmd_list)
   # save the commands to a temporary file so we can feed it into gnu
   # parallel
   #
-  cmdfile = Tempfile.new(['mk-flines', '.sh'], '.')
+  cmd_file = Tempfile.new(['mk-flines', '.sh'], '.')
   cmd_list.each do |cmd|
-    cmdfile.write(cmd)
-    cmdfile.write("\n")
+    cmd_file.write(cmd)
+    cmd_file.write("\n")
   end
-  cmdfile.flush
+  cmd_file.flush
 
-  parallel_cmd = "parallel --verbose --delay 2 < #{cmdfile.path}"
+  parallel_cmd = "parallel --verbose --delay 2 < #{cmd_file.path}"
 
-  IO.popen(parallel_cmd) do |f|
-    f.each_line {|line| puts line}
+  IO.popen(parallel_cmd) do |io|
+    io.each_line {|line| puts line}
   end
 
-  cmdfile.close
+  cmd_file.close
 end
 
 
+# strip 4-digit numbers out of a string
+# - eg, "cloud.0499.seed.lis" -> "0499"
+#
+def strip_digits(str)
+  str.gsub(/.*\.([0-9]{4})\..*/, '\1')
+end
+
+
+# find the base name of a vtk file
+# - 'cloud.0000.vtk' -> 'cloud'
+# - 'id99/lev4/cloud.0449.seed.lis' -> 'cloud'
+#
+def get_base(str)
+  # remove, eg, .dddd.vtk
+  front = str.gsub(/(.*)\.([0-9]{4})\..*/, '\1')
+  # remove, eg, id15/lev1/
+  front.sub(/.*\//, '')
+end
+
+
+
+################################################################################
+
+# <program>
+
 # get the basename
-# FIXME: this requires 0000.vtk file to exist
-base       = Dir.glob('*.0000.vtk').first.gsub('.0000.vtk', '').gsub('id0/', '')
+base = get_base(Dir.glob('*.vtk').first)
 
 
 # get pairs of vtk and seed files
-vtk_files  = Dir.glob('*.vtk').map{|f| f.gsub(/.*\.([0-9]{4})\.vtk/, '\1')}
-seed_files = Dir.glob('*.lis').map{|f| f.gsub(/.*\.([0-9]{4})\.seed.lis/, '\1')}
+vtk_files  = Dir.glob('*.vtk').map{|f| strip_digits(f)}
+seed_files = Dir.glob('*.lis').map{|f| strip_digits(f)}
 nums = vtk_files & seed_files   # & means 'intersect'
 
 
@@ -104,5 +130,8 @@ else
   puts "running #{cmds.length} files..."
   pipe_to_parallel(cmds)
 end
+
+# </program>
+
 
 exit 0
