@@ -83,6 +83,7 @@
   generally applicable or in any way user-friendly.
 
   That being said, you are of course free to use this code if you
-  like.  And I welcome patches, bug reports, or feature requests.  At
-  the moment, I just don't have the resources to turn this into a
-  finished application.
+  like.  And I do want it to be useful, so I'll help you get it
+  working if I can.  Of course I welcome patches, bug reports, or
+  feature requests.  At the moment, I just don't have the resources to
+  turn this into a finished application.
