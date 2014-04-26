@@ -26,6 +26,12 @@
   [[http://astro.berkeley.edu/~mkmcc/loop.mov][movie]] of a ball of field loops advecting through periodic boundary
   conditions
 
+  The mathematica code for plotting trajectories isn't specifically
+  tied to this project.  Here's an example using it to plot a random
+  set of Keplerian orbits:
+
+  [[examples/orbit-zoom.png]]
+
 * implementation
   I integrate streamlines using a 4th order Runge-Kutta solver with
   an adaptive step size; I use linear interpolation to get the values
@@ -42,39 +48,59 @@
   with distance to make them look more 3D.
 
 * usage
-  I've only tested the c program with the [[https://trac.princeton.edu/Athena/][Athena]] MHD code, but it
-  should work with any vtk file.  If not, only minor modifications
-  should be needed to make it work.  The mathematica code is more
-  general; it should plot any list of 3D points.
+** for plotting field lines
+   I've only tested the c program with the [[https://trac.princeton.edu/Athena/][Athena]] MHD code, but it
+   should work with any vtk file.  If not, only minor modifications
+   should be needed to make it work.  The mathematica code is more
+   general; it should plot any list of 3D points.
 
-  To get started, you can clone this repository and run make:
-  #+BEGIN_EXAMPLE
-  git clone git@github.com:mkmcc/flines.git
-  cd flines
-  make
-  #+END_EXAMPLE
+   To get started, you can clone this repository and run make:
+   #+BEGIN_EXAMPLE
+   git clone git@github.com:mkmcc/flines.git
+   cd flines
+   make
+   #+END_EXAMPLE
+   
+   Make makes the directory =bin= and puts everything you need in
+   there.
 
-  This produces a c program called =flines= which reads a vtk file
-  and solves for the magnetic field lines.  There's a ruby script
-  =mk-flines.rb= which runs the c program automatically.
+   If you run your simulation under MPI, put =join_vtk.x= and
+   =join-vtk.rb= in the simulation directory.  Running
+   #+BEGIN_EXAMPLE
+   ruby join-vtk.rb
+   #+END_EXAMPLE
+   makes a =merged= directory with the joined vtk files.  =flines=
+   only works with the merged files.
 
-  If you run your simulation under MPI, put =join_vtk.x= and
-  =join-vtk.rb= in the simulation directory.  Running
-  #+BEGIN_EXAMPLE
-  ruby join-vtk.rb
-  #+END_EXAMPLE
-  makes a =merged= directory with the joined vtk files.  If you put
-  =flines= and =mk-flines.rb= in the =merged= directory, you can
-  solve for the field lines 
-  #+BEGIN_EXAMPLE
-  ruby mk-flines.rb
-  #+END_EXAMPLE
-  Then, copy over the =movie.m= script and run it
-  #+BEGIN_EXAMPLE
-  mash movie.m
-  #+END_EXAMPLE
-  (this using the awesome [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash]] script).  This produces a series of
-  images which you can make into a movie.
+   If you put =flines= and =mk-flines.rb= in the =merged= directory,
+   you can solve for the field lines:
+   #+BEGIN_EXAMPLE
+   ruby mk-flines.rb
+   #+END_EXAMPLE
+   Then, copy over the =movie.m= script and run it
+   #+BEGIN_EXAMPLE
+   mash movie.m
+   #+END_EXAMPLE
+   (this using the awesome [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash]] script).  This produces a series of
+   images which you can make into a movie.
+
+** using the mathematica script only
+   You can also use the mathematica script on its own.  The most
+   important function to know about is 
+   #+BEGIN_EXAMPLE
+   plotproject[dist_, alpha_, beta_, orbits_, defaultcolor_: False]
+   #+END_EXAMPLE
+   Here =dist= is the distance from the camera to the origin in units
+   of the focal length.  =alpha= and =beta= are the angles from the
+   camera to the x-axis.  =orbits= is a list of trajectories to plot;
+   each trajectory is a list of 3D points: 
+   #+BEGIN_EXAMPLE
+   {{x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3}, ...}
+   #+END_EXAMPLE
+
+   The function =mkfig= reads in a file name and saves a plot as a
+   png image.  The format is consistent with gnuplot's =splot=
+   command.
 
 * status
   This code is an early prototype, and it may never mature beyond
