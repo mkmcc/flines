@@ -82,8 +82,9 @@
   the types of data I work with.  I've made no attempt to make this
   generally applicable or in any way user-friendly.
 
-  That being said, you are of course free to use this code if you
-  like.  And I do want it to be useful, so I'll help you get it
-  working if I can.  Of course I welcome patches, bug reports, or
-  feature requests.  At the moment, I just don't have the resources to
-  turn this into a finished application.
+  You are of course free to use this code if you like, but you
+  shouldn't expect to use it at this point without modifying the
+  source at some level.  That being said, I do want it to be useful,
+  so I'll help you get it working if I can.  Of course I welcome
+  patches, bug reports, or feature requests.  At the moment, I just
+  don't have the resources to turn this into a finished application.
