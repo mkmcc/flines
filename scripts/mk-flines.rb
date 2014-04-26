@@ -61,19 +61,19 @@ def pipe_to_parallel(cmd_list)
   # parallel
   #
   cmd_file = Tempfile.new(['mk-flines', '.sh'], '.')
-  cmd_list.each do |cmd|
-    cmd_file.write(cmd)
-    cmd_file.write("\n")
+  begin
+    cmd_list.each {|cmd| cmd_file.write(cmd + "\n")}
+    cmd_file.flush
+
+    parallel_cmd = "parallel --verbose --delay 2 < #{cmd_file.path}"
+
+    IO.popen(parallel_cmd) do |io|
+      io.each_line {|line| puts line}
+    end
+  ensure
+    cmd_file.close
+    cmd_file.unlink
   end
-  cmd_file.flush
-
-  parallel_cmd = "parallel --verbose --delay 2 < #{cmd_file.path}"
-
-  IO.popen(parallel_cmd) do |io|
-    io.each_line {|line| puts line}
-  end
-
-  cmd_file.close
 end
 
 
