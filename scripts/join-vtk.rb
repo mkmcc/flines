@@ -50,3 +50,5 @@ files.each do |num|
     issue_cmd cmd
   end
 end
+
+exit 0
