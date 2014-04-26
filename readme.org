@@ -1,22 +1,21 @@
-#+TITLE: flines: plot streamlines in vtk files
 #+STARTUP:showall
 
-This is a program for plotting streamlines of 3D vector fields.  
+* flines: plot streamlines in vtk files
+  This is a program for plotting streamlines of 3D vector fields.  My
+  goal is to be able to include lots of field lines without having the
+  plot become confusing.  I wasn't happy with any of the plotting
+  packages I tried, so I decided to write this code.  
 
-* details
-  I integrate streamlines using a 4th order Runge-Kutta solver with
-  an adaptive step size; I use linear interpolation to get the values
-  of the vector field along the streamline.
+  I settled on a method using brightly colored lines and an
+  exaggerated sense of perspective -- I think this strikes a nice
+  balance and shows the most detail in the field.  Check out the
+  examples below to see if you agree.
 
-  I attempt to cut off the integration when the streamlines either
-  close, or become chaotic and unpredictable.  The latter is not
-  necessary for still images, but essential for making movies.
-
-  I plot the streamlines using a simple mathematica code.  It builds
-  a simple camera matrix and uses it to project the lines onto an
-  image plane.  I prefer a short-ish focal length to exaggerate the
-  perspective.  I also scale the width and brightness of the lines
-  with distance to make them look more 3D.
+  The project really comprises two codes: there's a c code which reads
+  in the simulation data and integrates the field lines.  And there's
+  a mathematica code which makes the plots.  Each can be used quite
+  independently; see the implantation section below for more
+  information.
 
 * examples
   [[examples/ball.png]]
@@ -26,6 +25,21 @@ This is a program for plotting streamlines of 3D vector fields.
 
   [[http://astro.berkeley.edu/~mkmcc/loop.mov][movie]] of a ball of field loops advecting through periodic boundary
   conditions
+
+* implementation
+  I integrate streamlines using a 4th order Runge-Kutta solver with
+  an adaptive step size; I use linear interpolation to get the values
+  of the vector field along the streamline.
+
+  I attempt to cut off the integration when the streamlines either
+  close, or become chaotic and unpredictable.  The latter is not
+  necessary for still images, but essential for making movies.
+
+  I plot the streamlines using a simple mathematica code.  It builds a
+  "camera" matrix and uses it to project the lines onto an image
+  plane.  I prefer a short-ish focal length to exaggerate the
+  perspective.  I also scale the width and brightness of the lines
+  with distance to make them look more 3D.
 
 * usage
   TODO
