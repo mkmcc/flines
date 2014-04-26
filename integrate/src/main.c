@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,36 +11,44 @@
 #include "rk4.h"
 #include "par.h"
 
-/* VTK things */
-extern int Nx, Ny, Nz;
-extern double dx, dy, dz;
-extern Real3Vect ***B;
+/* variables defined in vtk.c */
+extern int Nx, Ny, Nz;          /* size of the grid in cell coordinates */
+extern double dx, dy, dz;       /* size of each cell in physical coordinates */
+extern Real3Vect ***B;          /* magnetic field */
 
-/* required by RK4.h */
+/* required for integration.  see RK4.h for documentation */
 int maxstep;
-double maxlen, accuracy_goal;
+double maxlen, tolerance;
 double close_lo, close_hi, xeno;
 
-/* driver function */
+/* driver function integrates a "bundle" of nearby field lines to
+   detect when they become chaotic.  need to terminate before this
+   point if you want to make a movie */
 static int nlines, nbundle;
 static double chaos_cut;
 void integrate_line(Real3Vect *xvals);
 
-int file_exists(const char *fname);
-
+/* initial "seed" points for the field lines can be read from a file
+   or generated randomly */
 void get_seed_points(char *seedfile, Real3Vect *seedpoints, int nseed);
+
+/* normalize the magnetic field strength.  not strictly necessary,
+   but it makes the integration step size h have reasonable units. */
 void normalize_B();
+
+/* write the field line data to a file such that gnuplot's "splot"
+   command can read it. */
 void write_data(char *outfname, Real3Vect **xvals);
 
 
+/* ========================================================================== */
+/* main(): mostly orchestrates input and output */
 int main (int argc, char *argv[])
 {
   FILE *fp;
 
   int i, j;
-  Real3Vect **xvals;
-
-  Real3Vect *seedpoints;
+  Real3Vect **xvals, *seedpoints;
   int nseed;
 
   char *vtkfile, *seedfile, *outfname, buf[512];
@@ -65,19 +72,17 @@ int main (int argc, char *argv[])
     }
   }
 
-
   par_open(athinput);
   par_cmdline(argc, argv);
 
-  vtkfile  = par_gets("files", "vtk_file");
 
+  /* read the input file */
+  vtkfile  = par_gets("files", "vtk_file");
   sprintf(buf, "%s.flines", vtkfile);
   outfname = par_gets_def("files", "out_file", buf);
 
-
   nseed    = par_geti_def("initial_condition", "n_seed",    1000);
   seedfile = par_gets_def("initial_condition", "seed_file", NULL);
-
 
   maxstep = par_geti_def("integration", "step_limit",  20000);
   maxlen  = par_getd_def("integration", "line_length", 1.0);
@@ -90,12 +95,10 @@ int main (int argc, char *argv[])
   close_lo = par_getd_def("integration", "close_lo", 1.0);
   close_hi = par_getd_def("integration", "close_hi", 4.0);
 
-  accuracy_goal = par_getd_def("integration", "tolerance", 1.0e-6);
+  tolerance = par_getd_def("integration", "tolerance", 1.0e-6);
 
   par_dump(2, stdout);
   par_close();
-
-
 
 
   /* read the VTK file */
@@ -104,16 +107,18 @@ int main (int argc, char *argv[])
   fclose(fp);
 
 
+  /* put maxlen and B in "cell" units */
   maxlen *= Nx;
   normalize_B();
 
+
+  /* initial condition for the field lines */
   seedpoints = (Real3Vect*) calloc_1d_array(nseed, sizeof(Real3Vect));
   get_seed_points(seedfile, seedpoints, nseed);
 
 
   /* allocate memory for the trajectories and initialize everything to -1.0 */
   xvals = (Real3Vect**)calloc_2d_array(nlines, maxstep, sizeof(Real3Vect));
-
   for (i=0; i<nlines; i++) {
     for (j=0; j<maxstep; j++) {
       xvals[i][j].x1 = xvals[i][j].x2 = xvals[i][j].x3 = -1.0;
@@ -132,18 +137,32 @@ int main (int argc, char *argv[])
   }
 
 
+  /* save the data to disk */
   write_data(outfname, xvals);
 
   /* Free the arrays used by read_vtk */
   cleanup_vtk();
-
   free_1d_array((void*)  seedpoints);
   free_2d_array((void**) xvals);
 
   return 0;
 }
+/* ========================================================================== */
 
 
+/* write the field line data to a file such that gnuplot's "splot"
+   command can read it:
+
+   - each line contains x, y, and z coordinates for a single point,
+     separated by spaces.
+
+   - different field lines are separated by blank lines.
+
+   - for economy, I don't output points closer than 1 cell.
+
+   - output points in a unit system where x, y, and z go from -1 to 1.
+     this makes plotting easier later, but may not be what I want.
+*/
 void write_data(char *outfname, Real3Vect **xvals)
 {
   int i, j;
@@ -183,24 +202,16 @@ void write_data(char *outfname, Real3Vect **xvals)
 
 void normalize_B()
 {
-  double B2;
-  double Brms, maxb2, minb2;
+  double B2, Brms;
   int i, j, k;
 
   Brms = 0.0;
-  maxb2 = 0.0;
-  minb2 = HUGE_NUMBER;
-
   for(k=0; k<Nz; k++){
     for(j=0; j<Ny; j++){
       for(i=0; i<Nx; i++){
         B2 = (SQR(B[k][j][i].x1) +
               SQR(B[k][j][i].x2) +
               SQR(B[k][j][i].x3));
-
-        maxb2 = MAX(maxb2, B2);
-        minb2 = MIN(minb2, B2);
-
         Brms += B2;
       }
     }
@@ -221,6 +232,22 @@ void normalize_B()
   return;
 }
 
+
+/* set initial conditions for the field lines.  these can be
+   generated randomly or read in from a "seed file" written by
+   athena.  the format for the seed file is as follows:
+
+   # time = 17.960301
+   0    0.147636        0.127228        0.104124
+   1    0.020408        -0.260193       -0.021771
+   2    -0.140130       -0.028677       0.061697
+   3    -0.070474       -0.111080       -0.021247
+   4    0.113590        0.058400        0.154429
+   5    -0.055813       -0.248949       -0.052291
+
+   each row gives a point (labeled by an integer) and x, y, and z
+   coordinates (as %f, not %lf) in physical (not cell) coordinates.
+*/
 void get_seed_points(char *seedfile, Real3Vect *seedpoints, int nseed)
 {
   int i, ignore;
@@ -261,6 +288,12 @@ void get_seed_points(char *seedfile, Real3Vect *seedpoints, int nseed)
 }
 
 
+/* this function makes the field lines; it essentially does all the
+   work.  I've found that the field lines can become chaotic; this is
+   really distracting in movies since they tend to flick around.  so
+   this function initializes a "bundle" of nearby field lines and
+   integrates all of them.  I cut off the main field line when the
+   width of the bundle reaches chaos_cut. */
 void integrate_line(Real3Vect *xvals)
 {
   int i,j;
@@ -319,16 +352,4 @@ void integrate_line(Real3Vect *xvals)
   free_2d_array((void**) bundle);
 
   return;
-}
-
-
-int file_exists(const char *fname)
-{
-  FILE *file = fopen(fname, "r");
-  if (file != NULL)
-  {
-    fclose(file);
-    return 1;
-  }
-  return 0;
 }
