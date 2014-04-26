@@ -51,4 +51,14 @@ files.each do |num|
   end
 end
 
+
+seed_id0 = Dir.glob('id0/*.seed.lis').map{|f| f.sub('id0/', '')}
+seed_mer = Dir.glob('merged/*.seed.lis').map{|f| f.sub('merged/', '')}
+seed_copy = seed_id0 - seed_mer
+
+seed_copy.each do |seed|
+  str = "cp id0/#{seed} merged/"
+  issue_cmd str
+end
+
 exit 0
