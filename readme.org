@@ -32,8 +32,8 @@
   of the vector field along the streamline.
 
   I attempt to cut off the integration when the streamlines either
-  close, or become chaotic and unpredictable.  The latter is not
-  necessary for still images, but essential for making movies.
+  close, or become chaotic.  The latter is not necessary for still
+  images, but essential for making movies.
 
   I plot the streamlines using a simple mathematica code.  It builds a
   "camera" matrix and uses it to project the lines onto an image
@@ -42,7 +42,39 @@
   with distance to make them look more 3D.
 
 * usage
-  TODO
+  I've only tested the c program with the [[https://trac.princeton.edu/Athena/][Athena]] MHD code, but it
+  should work with any vtk file.  If not, only minor modifications
+  should be needed to make it work.  The mathematica code is more
+  general; it should plot any list of 3D points.
+
+  To get started, you can clone this repository and run make:
+  #+BEGIN_EXAMPLE
+  git clone git@github.com:mkmcc/flines.git
+  cd flines
+  make
+  #+END_EXAMPLE
+
+  This produces a c program called =flines= which reads a vtk file
+  and solves for the magnetic field lines.  There's a ruby script
+  =mk-flines.rb= which runs the c program automatically.
+
+  If you run your simulation under MPI, put =join_vtk.x= and
+  =join-vtk.rb= in the simulation directory.  Running
+  #+BEGIN_EXAMPLE
+  ruby join-vtk.rb
+  #+END_EXAMPLE
+  makes a =merged= directory with the joined vtk files.  If you put
+  =flines= and =mk-flines.rb= in the =merged= directory, you can
+  solve for the field lines 
+  #+BEGIN_EXAMPLE
+  ruby mk-flines.rb
+  #+END_EXAMPLE
+  Then, copy over the =movie.m= script and run it
+  #+BEGIN_EXAMPLE
+  mash movie.m
+  #+END_EXAMPLE
+  (this using the awesome [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash]] script).  This produces a series of
+  images which you can make into a movie.
 
 * status
   This code is an early prototype, and it may never mature beyond
