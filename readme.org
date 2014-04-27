@@ -23,7 +23,7 @@
 
   I tried to make the integration accurate enough for the field lines
   to follow the flow.  So you can use this code to make meaningful
-  movies of magnetic field lines.  Here's an [[http://astro.berkeley.edu/~mkmcc/spaghetti.mov][movie]] of a ball of
+  movies of magnetic field lines.  Here's a [[http://astro.berkeley.edu/~mkmcc/spaghetti.mov][movie]] of a ball of
   tangled field lines unwinding.  And here's a [[http://astro.berkeley.edu/~mkmcc/loop.mov][movie]] of a ball of
   field loops advecting through periodic boundary conditions.
 
@@ -130,7 +130,7 @@
 
    This produces a series of images which you can make into a movie.
 
-   =join-vtk.rb=, =mk-flines.rb=, and =movie.m= don't run if the
+   =join-vtk.rb=, =mk-flines.rb=, and =movie.m= all check whether the
    output they'd produce is up to date.  So you can run them
    repeatedly as your simulation progresses without wasting any work.
 
@@ -148,9 +148,11 @@
    {{x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3}, ...}
    #+END_EXAMPLE
 
-   The function =mkfig= reads in a file name and saves a plot as a
-   png image.  The format is consistent with gnuplot's =splot=
-   command.
+   =plotproject= will work with any list of lists of points you give
+   it.  If you want to read the points in from a file, the function
+   =mkfig= might be useful for you.  It takes a file name as input and
+   saves a plot as a png image.  The format is consistent with
+   gnuplot's =splot= command.
 
 * status
   This code is an early prototype, and it may never mature beyond
