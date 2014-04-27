@@ -87,7 +87,7 @@
 ** for plotting field lines
    I've only tested the c program with the [[https://trac.princeton.edu/Athena/][Athena]] MHD code, but it
    should work with any vtk file.  If not, only minor modifications
-   should be needed to make it work.  The mathematica code is more
+   should be needed to get it working.  The mathematica code is more
    general; it should plot any list of 3D points.
 
    To get started, you can clone this repository and run make:
@@ -100,25 +100,39 @@
    Make makes the directory =bin= and puts everything you need in
    there.
 
-   If you run your simulation under MPI, put =join_vtk.x= and
-   =join-vtk.rb= in the simulation directory.  Running
+   =flines= assumes the vtk data is all in a single file.  If you run
+   your simulation under MPI, you'll need to join the outputs from
+   different processors first.  If you put =join_vtk.x= and
+   =join-vtk.rb= in the simulation directory, running
    #+BEGIN_EXAMPLE
    ruby join-vtk.rb
    #+END_EXAMPLE
-   makes a =merged= directory with the joined vtk files.  =flines=
-   only works with the merged files.
+   will do this for you.  It makes a =merged= directory with the
+   joined vtk files.
 
    If you put =flines= and =mk-flines.rb= in the =merged= directory,
    you can solve for the field lines:
    #+BEGIN_EXAMPLE
    ruby mk-flines.rb
    #+END_EXAMPLE
-   Then, copy over the =movie.m= script and run it
+   =mk-flines.rb= runs in parallel if you have =gnu parallel=
+   installed; otherwise it runs in serial.
+
+   Then, copy the =movie.m= script into =merged= and run it
    #+BEGIN_EXAMPLE
    mash movie.m
    #+END_EXAMPLE
-   (this using the awesome [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash]] script).  This produces a series of
-   images which you can make into a movie.
+   (this is using the awesome [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash]] script.  If you don't have that,
+   you can either do something like this: 
+   =MathKernel -noprompt -run << movie.m=, or you can copy the
+   contents of =movie.m= into a mathematica notebook and run it
+   there).
+
+   This produces a series of images which you can make into a movie.
+
+   =join-vtk.rb=, =mk-flines.rb=, and =movie.m= don't run if the
+   output they'd produce is up to date.  So you can run them
+   repeatedly as your simulation progresses without wasting any work.
 
 ** using the mathematica script only
    You can also use the mathematica script on its own.  The most
