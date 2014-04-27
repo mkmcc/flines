@@ -131,7 +131,7 @@
    series of images which you can make into a movie.
 
    If you don't want to use the mathematica script, you can also use
-   gnuplot.  For example, =splot 'cloud.0100.flines' w l'.
+   gnuplot.  For example, =splot 'cloud.0100.flines' w l=.
 
    =join-vtk.rb=, =mk-flines.rb=, and =movie.m= all check whether the
    output they'd produce is up to date.  So you can run them
