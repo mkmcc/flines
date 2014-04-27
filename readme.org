@@ -4,18 +4,18 @@
   This is a program for plotting streamlines of 3D vector fields.  My
   goal is to be able to include lots of field lines without having the
   plot become confusing.  I wasn't happy with any of the plotting
-  packages I tried, so I decided to write this code.  
+  packages I tried, so I decided to write this one.  
 
   I settled on a method using brightly colored lines and an
   exaggerated sense of perspective -- I think this strikes a nice
   balance and shows the most detail in the field.  Check out the
   examples below to see if you agree.
 
-  The project really comprises two codes: there's a c code which reads
-  in the simulation data and integrates the field lines.  And there's
-  a mathematica code which makes the plots.  Each can be used quite
-  independently; see the implementation section below for more
-  information.
+  The project really comprises two programs: there's a c code which
+  reads in the simulation data and integrates the field lines.  And
+  there's a mathematica script which makes the plots.  Each can be
+  used quite independently; see the implementation section below for
+  more information.
 
 * examples
   [[examples/ball.png]]
@@ -115,20 +115,23 @@
    #+BEGIN_EXAMPLE
    ruby mk-flines.rb
    #+END_EXAMPLE
-   =mk-flines.rb= runs in parallel if you have =gnu parallel=
-   installed; otherwise it runs in serial.
+   This produces a "flines" file corresponding to every "vtk" file
+   (e.g., cloud.0100.vtk -> cloud.0100.flines).  =mk-flines.rb= runs
+   in parallel if you have =gnu parallel= installed; otherwise it runs
+   in serial.
 
-   Then, copy the =movie.m= script into =merged= and run it
+   To make plots, copy the =movie.m= script into =merged= and run it
    #+BEGIN_EXAMPLE
    mash movie.m
    #+END_EXAMPLE
-   (this is using the awesome [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash]] script.  If you don't have that,
-   you can either do something like this: 
-   =MathKernel -noprompt -run << movie.m=, or you can copy the
-   contents of =movie.m= into a mathematica notebook and run it
-   there).
+   (this is using the awesome [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash]] script.  If you don't want to use
+   mash, you can either do something like this: =MathKernel -noprompt
+   -run << movie.m=, or you can copy the contents of =movie.m= into a
+   mathematica notebook and run it there).  =movie.m= produces a
+   series of images which you can make into a movie.
 
-   This produces a series of images which you can make into a movie.
+   If you don't want to use the mathematica script, you can also use
+   gnuplot.  For example, =splot 'cloud.0100.flines' w l'.
 
    =join-vtk.rb=, =mk-flines.rb=, and =movie.m= all check whether the
    output they'd produce is up to date.  So you can run them
@@ -166,3 +169,45 @@
   so I'll help you get it working if I can.  Of course I welcome
   patches, bug reports, or feature requests.  At the moment, I just
   don't have the resources to turn this into a finished application.
+
+  Since I've used code from the [[https://trac.princeton.edu/Athena/wiki/AthenaDocsDownLd][Athena]] project, this project is also
+  released under the [[https://www.gnu.org/copyleft/gpl.html][GPL license]].  You should use and modify it in
+  any way you see fit.
+
+* TODO
+** plotting
+   1. currently, field lines are drawn on top of the frame.  would be
+      nice to fix
+   2. change color along field lines, according to strength?
+      1. I tried this, and I think it made the plot too confusing.
+         constant colors help tell the lines apart
+   3. write a script to run =movie.m= in parallel.
+      1. this should be trivial in the mathematica code: =Map= ->
+         =ParallelMap=.  that works for me in mathematica 7, but not
+         mathematica 9.  annoying, but easy to solve with =xargs=...
+** replace mathematica code?
+   Plotting field lines essentially involves threading matrix
+   multiplication across a list of points and then drawing a bunch of
+   line segments.  Mathematica is almost ideally suited to this task.
+   Unfortunately, it also has a number of problems:
+   1. mathematica is closed source, expensive, and not available
+      everywhere.
+   2. mathematica has an awkward syntax -- sort of half-lisp, half-c
+      -- which may seem unfamiliar and hard to modify
+   3. mathematica doesn't give you explicit control over the size or
+      centering of images, which is /really/ annoying for making
+      movies
+   Also, Mathematica 9 seems to have trouble running =movie.m= in
+   parallel, at least on my computer.  That is annoying.
+
+   So I'm contemplating rewriting the plotting code in a different
+   language.  One option is to use clojure with [[https://github.com/quil/quil][quil]].  But clojure
+   isn't widely used among scientists, and it's kind of a pain to
+   install.  Another option is to write it in c, using the [[http://cairographics.org/][cairo]]
+   graphics library.  But I don't like to write in c unless I have
+   to.  I may write it in ruby using the wonderful [[http://www.kitp.ucsb.edu/members/PM/paxton/tioga.html][Tioga]] graphics
+   library.
+** c code
+   1. weight seed-point sampling by field strength?  seems like a
+      good idea.
+   2. add support for velocity streamlines?
