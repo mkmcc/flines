@@ -207,6 +207,7 @@
    graphics library.  But I don't like to write in c unless I have
    to.  I may write it in ruby using the wonderful [[http://www.kitp.ucsb.edu/members/PM/paxton/tioga.html][Tioga]] graphics
    library.
+   - see the tioga/ directory for a start using ruby and tioga
 ** c code
    1. weight seed-point sampling by field strength?  seems like a
       good idea.
